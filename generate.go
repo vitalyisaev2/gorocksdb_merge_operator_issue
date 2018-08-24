@@ -9,7 +9,7 @@ import (
 
 func performGeneration(db *gorocksdb.DB) error {
 	const (
-		keyTotal    = 1024 * 1024
+		keysTotal   = 10 * 1024 * 1024
 		keyLength   = 32
 		valueLength = 64
 	)
@@ -18,15 +18,15 @@ func performGeneration(db *gorocksdb.DB) error {
 	wo.SetSync(false)
 	defer wo.Destroy()
 
-	for i := 0; i < keyTotal; i++ {
+	for i := 0; i < keysTotal; i++ {
 		key := randBytes(keyLength)
 		value := randBytes(valueLength)
 		if err := db.Put(wo, key, value); err != nil {
 			return err
 		}
 
-		if i%(keyTotal/10) == 0 {
-			log.Printf("Progress: %v\n", 100*float64(i)/float64(keyTotal))
+		if i%(keysTotal/10) == 0 {
+			log.Printf("Progress: %v\n", int(100*float64(i)/float64(keysTotal)))
 		}
 	}
 

@@ -9,8 +9,8 @@ import (
 
 // performIteration runs iterator several times
 func performIteration(db *gorocksdb.DB) error {
-
-	for i := 0; i < 3; i++ {
+	const n = 10
+	for i := 0; i < n; i++ {
 		if err := iterate(db); err != nil {
 			return err
 		}
@@ -25,8 +25,8 @@ func iterate(db *gorocksdb.DB) error {
 	defer log.Println("Iteration finished")
 
 	// estimate number of keys
-	keyTotalString := db.GetProperty("rocksdb.estimate-num-keys")
-	keyTotal, err := strconv.Atoi(keyTotalString)
+	keysTotalString := db.GetProperty("rocksdb.estimate-num-keys")
+	keysTotal, err := strconv.Atoi(keysTotalString)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func iterate(db *gorocksdb.DB) error {
 	// perform iteration
 	var count int
 	for it.SeekToFirst(); it.Valid(); it.Next() {
-		step(it, keyTotal, &count)
+		step(it, keysTotal, &count)
 	}
 
 	if err := it.Err(); err != nil {
@@ -52,7 +52,7 @@ func iterate(db *gorocksdb.DB) error {
 }
 
 // step makes some fake work with every database key and value
-func step(it *gorocksdb.Iterator, keyTotal int, keyCount *int) {
+func step(it *gorocksdb.Iterator, keysTotal int, keyCount *int) {
 	key := it.Key()
 	defer key.Free()
 	value := it.Value()
@@ -61,8 +61,8 @@ func step(it *gorocksdb.Iterator, keyTotal int, keyCount *int) {
 	k := key.Data()
 	v := value.Data()
 
-	if *keyCount%(keyTotal/10) == 0 {
-		log.Printf("Progress: %v\n", 100*float64(*keyCount)/float64(keyTotal))
+	if *keyCount%(keysTotal/10) == 0 {
+		log.Printf("Progress: %v\n", int(100*float64(*keyCount)/float64(keysTotal)))
 		log.Printf("Data example: key=%v value_len=%v\n", hex.EncodeToString(k), len(v))
 	}
 	*keyCount++
