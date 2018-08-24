@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"fmt"
-
 	"github.com/tecbot/gorocksdb"
 )
 
@@ -38,8 +36,9 @@ func main() {
 	)
 	switch os.Args[2] {
 	case actionGenerate:
-		dbFactory = openDBForWriting
-		action = performGeneration
+		log.Fatal("Don't use data generation, use prepared dump")
+		// dbFactory = openDBForWriting
+		// action = performGeneration
 	case actionIterate:
 		dbFactory = openDBForReading
 		action = performIteration
@@ -72,7 +71,7 @@ func openDBForWriting(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 	opts.PrepareForBulkLoad()
 	opts.SetMergeOperator(mo)
 
-	db, err := gorocksdb.OpenDb(opts, fmt.Sprintf("./data_%s/", mo.Name()))
+	db, err := gorocksdb.OpenDb(opts, "segments")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -99,7 +98,7 @@ func openDBForReading(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 	opts.SetBlockBasedTableFactory(bbto)
 	opts.SetMergeOperator(mo)
 
-	db, err := gorocksdb.OpenDb(opts, fmt.Sprintf("./data_%s/", mo.Name()))
+	db, err := gorocksdb.OpenDb(opts, "segments")
 	if err != nil {
 		return nil, nil, err
 	}

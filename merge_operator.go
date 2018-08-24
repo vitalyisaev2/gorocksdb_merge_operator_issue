@@ -20,7 +20,13 @@ func (mo *dummyMergeOperator) PartialMerge(_, _, _ []byte) ([]byte, bool) {
 func (mo *dummyMergeOperator) Name() string { return mergeDummy }
 
 // realMergeOperator emulates the behavior of real merger;
-// consider a contrived example when merge operation is just a concatenation of bytes
+// in a real use-case basically there would be at least three steps to perform Merge:
+// 1. deserialize objects from operands;
+// 2. merge it according to the logic of application;
+// 3. serialize the resulting objects;
+//
+// here we'll follow a contrived approach when merge operation is just a concatenation of bytes;
+// the most important thing is that real merge operation always allocates some new memory
 type realMergeOperator struct{}
 
 var _ gorocksdb.MergeOperator = (*realMergeOperator)(nil)

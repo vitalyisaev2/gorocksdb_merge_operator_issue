@@ -14,4 +14,4 @@
 gorocksdb_merge_operator_issue
 massif*
 .idea
-data*
+segments*
