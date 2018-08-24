@@ -1,6 +1,11 @@
 ### gorocksdb_merge_operator_issue
 
-We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database. After some tests we've find out that the memory allocated within `MergeOperator` is actually held forewer.
+We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. This is the minimal working example reproducing this issue. We prepared two implementations of `MergeOperator`:
+1. `dummy` that does nothing;
+2. `real` which allocates some memory, emulating the behaviour of real-life `MergeOperator` implementation;
+The use of `real` implementaion results in memory leak on the `C++` side of the application. 
+
+Please follow these steps to reproduce:
 
 #### Prerequisites
 ```
@@ -37,4 +42,4 @@ Launch GUI tool to visualize heap profile:
 massif-visualizer massif.out.$PID
 ```
 
-#### Problem descrpition
+#### Results
