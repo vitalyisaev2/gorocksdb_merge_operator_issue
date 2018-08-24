@@ -1,8 +1,11 @@
 ### gorocksdb_merge_operator_issue
 
-We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. This is the minimal working example reproducing this issue. We prepared two implementations of `MergeOperator`:
-1. `dummy` that does nothing;
+We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. This is the minimal working example reproducing this issue. The application just iterates several times over the databse.
+
+There are two implementations of `MergeOperator`:
+1. `dummy` that actually does nothing;
 2. `real` which allocates some memory, emulating the behaviour of real-life `MergeOperator` implementation;
+
 The use of `real` implementaion results in memory leak on the `C++` side of the application. 
 
 Please follow these steps to reproduce:
@@ -44,6 +47,12 @@ massif-visualizer massif.out.$PID
 
 #### Results
 
+##### `Dummy`
+Everything is fine here.
 ![dummy](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/profile.dummy.jpeg)
 
+##### `Real`
+It turns out that the huge amount of memory is allocated within `CGO` parts of the application code (it is hidden behind `runtime.asmcgocall`), and this memory is never freed.
 ![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/profile.real.jpeg)
+
+Any help will be appreciated.
