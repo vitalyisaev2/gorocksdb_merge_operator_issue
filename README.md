@@ -1,0 +1,2 @@
+# gorocksdb_merge_operator_issue
+Debugging gorocksdb memory consumption
