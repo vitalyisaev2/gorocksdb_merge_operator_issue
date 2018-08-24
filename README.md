@@ -43,3 +43,7 @@ massif-visualizer massif.out.$PID
 ```
 
 #### Results
+
+![dummy](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/profile.dummy.jpeg)
+
+![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/profile.real.jpeg)
