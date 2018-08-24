@@ -1,0 +1,69 @@
+package main
+
+import (
+	"github.com/tecbot/gorocksdb"
+	"log"
+	"encoding/hex"
+	"strconv"
+)
+
+// performIteration runs iterator several times
+func performIteration(db *gorocksdb.DB) error {
+
+	for i := 0; i < 3; i++ {
+		if err := iterate(db); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+
+// iterate creates new iterator and walks through the whole database
+func iterate(db *gorocksdb.DB) error {
+	log.Println("Iteration started")
+	defer log.Println("Iteration finished")
+
+	// estimate number of keys
+	keyTotalString := db.GetProperty("rocksdb.estimate-num-keys")
+	keyTotal, err := strconv.Atoi(keyTotalString)
+	if err != nil {
+		return err
+	}
+
+	// create iterator over whole database
+	ro := gorocksdb.NewDefaultReadOptions()
+	ro.SetFillCache(false)
+	ro.SetTailing(true)
+	it := db.NewIterator(ro)
+	defer it.Close()
+
+	// perform iteration
+	var count int
+	for it.SeekToFirst(); it.Valid(); it.Next() {
+		step(it, keyTotal, &count)
+	}
+
+	if err := it.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// step makes some fake work with every database key and value
+func step(it *gorocksdb.Iterator, keyTotal int, keyCount *int) {
+	key := it.Key()
+	defer key.Free()
+	value := it.Value()
+	defer value.Free()
+
+	k := key.Data()
+	v := value.Data()
+
+	if *keyCount%(keyTotal/10) == 0 {
+		log.Printf("Progress: %v\n", 100*float64(*keyCount)/float64(keyTotal))
+		log.Printf("Data example: key=%v value_len=%v\n", hex.EncodeToString(k), len(v))
+	}
+	*keyCount++
+}
