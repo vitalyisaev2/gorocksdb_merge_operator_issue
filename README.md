@@ -1,6 +1,6 @@
 ## gorocksdb_merge_operator_issue
 
-We have `Go` application that uses `Rocksdb` via `CGO` wrappers (). Currently we are experiencing uncontrolled process memory growth during the iteration over the whole RocksDB databases. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. Two minimal working examples in `Go` and `C++` are provided to explore this issue. Both examples are just iterating several times over the database. Please follow these steps to reproduce:
+We have `Go` application that uses `Rocksdb` via `CGO` wrappers (https://github.com/tecbot/gorocksdb). Currently we are experiencing uncontrolled process memory growth at the time of the iteration over the whole RocksDB database. After some tests we've find out that memory allocated within `MergeOperator` is actually never freed. Two minimal working examples in `Go` and `C++` are provided to explore this issue. Both examples are just iterating several times over the database. Please follow these steps to reproduce:
 
 Install build dependencies the way you prefer:
 1. `go` 1.10.1
