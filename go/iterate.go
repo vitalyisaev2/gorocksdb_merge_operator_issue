@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/tecbot/gorocksdb"
 	"log"
-	"encoding/hex"
 	"strconv"
+
+	"github.com/tecbot/gorocksdb"
 )
 
 // performIteration runs iterator several times
 func performIteration(db *gorocksdb.DB) error {
-	const n = 5
+	const n = 3
 	for i := 0; i < n; i++ {
 		if err := iterate(db); err != nil {
 			return err
@@ -39,31 +39,36 @@ func iterate(db *gorocksdb.DB) error {
 	defer it.Close()
 
 	// perform iteration
-	var count int
+	var (
+		keysCount   int
+		valueLenSum int
+	)
 	for it.SeekToFirst(); it.Valid(); it.Next() {
-		step(it, keysTotal, &count)
+		valueLenSum += step(it, keysTotal, keysCount)
+		keysCount++
 	}
 
 	if err := it.Err(); err != nil {
 		return err
 	}
 
+	log.Printf("Sum of value lengths: %d\n", valueLenSum)
+
 	return nil
 }
 
 // step makes some fake work with every database key and value
-func step(it *gorocksdb.Iterator, keysTotal int, keyCount *int) {
+func step(it *gorocksdb.Iterator, keysTotal int, keysCount int) int {
 	key := it.Key()
 	defer key.Free()
 	value := it.Value()
 	defer value.Free()
 
-	k := key.Data()
-	v := value.Data()
+	_ = key.Data()
+	_ = value.Data()
 
-	if *keyCount%(keysTotal/10) == 0 {
-		log.Printf("Progress: %v\n", int(100*float64(*keyCount)/float64(keysTotal)))
-		log.Printf("Data example: key=%v value_len=%v\n", hex.EncodeToString(k), len(v))
+	if keysCount%(keysTotal/10) == 0 {
+		log.Printf("Progress: %v\n", int(100*float64(keysCount)/float64(keysTotal)))
 	}
-	*keyCount++
+	return value.Size()
 }

@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"os"
+	"runtime"
+
 	"github.com/tecbot/gorocksdb"
 )
 
@@ -85,11 +87,8 @@ func openDBForWriting(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 }
 
 func openDBForReading(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error) {
-	cache := gorocksdb.NewLRUCache(1024 * 1024)
 
 	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
-	bbto.SetBlockCache(cache)
-
 	filter := gorocksdb.NewBloomFilter(10)
 	bbto.SetFilterPolicy(filter)
 
@@ -97,6 +96,8 @@ func openDBForReading(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 	opts.SetCreateIfMissing(true)
 	opts.SetBlockBasedTableFactory(bbto)
 	opts.SetMergeOperator(mo)
+	opts.IncreaseParallelism(runtime.NumCPU())
+	opts.OptimizeLevelStyleCompaction(512 * 1024 * 1024)
 
 	db, err := gorocksdb.OpenDb(opts, "segments")
 	if err != nil {
@@ -107,7 +108,6 @@ func openDBForReading(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 		db.Close()
 		opts.Destroy()
 		bbto.Destroy()
-		cache.Destroy()
 	}
 	return db, free, nil
 }

@@ -11,7 +11,8 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-gorocksdb_merge_operator_issue
+mve-*
 massif*
 .idea
+.vscode
 segments*
