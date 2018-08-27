@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/tecbot/gorocksdb"
-	"log"
 	"encoding/hex"
+	"log"
 	"strconv"
+
+	"github.com/tecbot/gorocksdb"
 )
 
 // performIteration runs iterator several times
