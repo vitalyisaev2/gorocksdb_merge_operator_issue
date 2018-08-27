@@ -35,11 +35,10 @@ void run() {
 
     //   // Optimize RocksDB. This is the easiest way to get RocksDB to perform well
     //   options.IncreaseParallelism();
-    //   options.OptimizeLevelStyleCompaction();
+    options.OptimizeLevelStyleCompaction();
     //   // create the DB if it's not already present
     //   options.create_if_missing = true;
-    auto mo = new RealMergeOperator();
-    options.merge_operator.reset(mo);
+    options.merge_operator.reset(new RealMergeOperator());
 
     // open DB
     rocksdb::Status s = rocksdb::DB::Open(options, kDBPath, &db);
@@ -52,12 +51,11 @@ void run() {
     performIteration(db);
 
     delete db;
-    delete mo;
 }
 
 void performIteration(rocksdb::DB *db)
 {
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         std::cout << "Iteration started" << std::endl;
         iterate(db);
@@ -81,7 +79,7 @@ int estimateNumKeys(rocksdb::DB *db)
 void iterate(rocksdb::DB *db)
 {
     auto totalKeys = estimateNumKeys(db);
-    std::cout << totalKeys << std::endl;
+    std::cout << "total keys: " << totalKeys << std::endl;
 
     auto readOptions = rocksdb::ReadOptions();
     readOptions.tailing = true;
@@ -106,6 +104,6 @@ void step(rocksdb::Iterator *it, int counter)
     if (counter % 1000000 == 0)
     {
         std::cout << "Progress: " << counter << std::endl;
-        std::cout << "Example: " << it->key().ToString() << " " << it->value().ToString() << std::endl;
+        std::cout << "Example key length: " << it->key().size() << "; exmaple value length: " << it->value().size() << std::endl;
     }
 }

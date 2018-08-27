@@ -1,6 +1,6 @@
 ## gorocksdb_merge_operator_issue
 
-We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. This is the minimal working example reproducing this issue. The application just iterates several times over the databse.
+We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database in one of our Go applications. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. This is the minimal working example reproducing this issue. The application just iterates several times over the database.
 
 There are two implementations of `MergeOperator`:
 1. `dummy` that actually does nothing;
@@ -10,7 +10,6 @@ The use of `real` implementaion results in memory leak on the `C++` side of the 
 
 Please follow these steps to reproduce:
 
-### C++
 
 ### Go
 
@@ -59,4 +58,5 @@ Everything is fine here.
 It turns out that the huge amount of memory is allocated within `CGO` parts of the application code (it is hidden behind `runtime.asmcgocall`), and this memory is never freed.
 ![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/go/profile.real.jpeg)
 
-Any help will be appreciated.
+### C++
+

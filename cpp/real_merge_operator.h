@@ -1,9 +1,14 @@
 #include "rocksdb/merge_operator.h"
 #include "rocksdb/slice.h"
 
+// RealMergeOperator has been borrowed from the outdated StringAppendTESTOperator from rocksdb repo:
+// https://github.com/facebook/rocksdb/blob/4.0.fb/utilities/merge_operators/string_append/stringappend2.h
 class RealMergeOperator : public rocksdb::MergeOperator
 {
   public:
+    RealMergeOperator() {};
+    ~RealMergeOperator() {};
+
     // FullMerge just concatenates all values into another value
     virtual bool FullMerge(const rocksdb::Slice &key,
                            const rocksdb::Slice *existing_value,
