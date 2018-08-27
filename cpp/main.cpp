@@ -8,38 +8,57 @@
 #include "rocksdb/slice.h"
 #include "rocksdb/options.h"
 
-using namespace rocksdb;
+#include "real_merge_operator.h"
 
 std::string kDBPath = "./segments";
 
-void performIteration(DB *db);
-void iterate(DB *db);
-int estimateNumKeys(DB *db);
-void step(Iterator* it, int count);
+void performIteration(rocksdb::DB *db);
+void iterate(rocksdb::DB *db);
+int estimateNumKeys(rocksdb::DB *db);
+void step(rocksdb::Iterator *it, int count);
+void run();
 
-int main() {
-    DB* db;
-    Options options;
-    
+int main()
+{
+    try {
+        run();
+    } catch (const std::exception& ex) {
+        std::cout << "Exception: " << ex.what() << std::endl;
+        return 1;
+    }
+    return 0;
+}
+
+void run() {
+    rocksdb::DB *db;
+    rocksdb::Options options;
+
     //   // Optimize RocksDB. This is the easiest way to get RocksDB to perform well
     //   options.IncreaseParallelism();
     //   options.OptimizeLevelStyleCompaction();
     //   // create the DB if it's not already present
     //   options.create_if_missing = true;
-    
+    auto mo = new RealMergeOperator();
+    options.merge_operator.reset(mo);
+
     // open DB
-    Status s = DB::Open(options, kDBPath, &db);
-    assert(s.ok());
-    
-    // iterate several times
+    rocksdb::Status s = rocksdb::DB::Open(options, kDBPath, &db);
+    if (!s.ok())
+    {
+        throw std::runtime_error("can not open database");
+    }
+
+    // iterate over whole database several times
     performIteration(db);
-    
+
     delete db;
-    return 0;
+    delete mo;
 }
 
-void performIteration (DB* db) {
-    for (int i = 0; i < 5; ++i) {
+void performIteration(rocksdb::DB *db)
+{
+    for (int i = 0; i < 5; ++i)
+    {
         std::cout << "Iteration started" << std::endl;
         iterate(db);
         std::cout << "Iteration finished" << std::endl;
@@ -47,38 +66,45 @@ void performIteration (DB* db) {
     }
 }
 
-int estimateNumKeys(DB *db) {
+int estimateNumKeys(rocksdb::DB *db)
+{
     std::string num;
     auto ok = db->GetProperty("rocksdb.estimate-num-keys", &num);
-    if (!ok) {
+    if (!ok)
+    {
         throw std::runtime_error("can not estimate number of keys in database");
     }
 
     return std::stoi(num);
 }
 
-void iterate(DB* db) {
+void iterate(rocksdb::DB *db)
+{
     auto totalKeys = estimateNumKeys(db);
     std::cout << totalKeys << std::endl;
 
-    auto readOptions = ReadOptions();
+    auto readOptions = rocksdb::ReadOptions();
     readOptions.tailing = true;
     readOptions.fill_cache = false;
 
     int counter = 0;
     auto it = db->NewIterator(readOptions);
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+    for (it->SeekToFirst(); it->Valid(); it->Next())
+    {
         counter++;
         step(it, counter);
     };
 
-    if (!it->status().ok()) {
+    if (!it->status().ok())
+    {
         throw std::runtime_error(it->status().ToString());
     }
 }
 
-void step(Iterator* it, int counter) {
-    if (counter % 1000000 == 0) {
+void step(rocksdb::Iterator *it, int counter)
+{
+    if (counter % 1000000 == 0)
+    {
         std::cout << "Progress: " << counter << std::endl;
         std::cout << "Example: " << it->key().ToString() << " " << it->value().ToString() << std::endl;
     }

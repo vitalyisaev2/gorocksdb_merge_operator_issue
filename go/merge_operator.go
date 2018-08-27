@@ -14,7 +14,7 @@ func (mo *dummyMergeOperator) FullMerge(_, _ []byte, _ [][]byte) ([]byte, bool) 
 }
 
 func (mo *dummyMergeOperator) PartialMerge(_, _, _ []byte) ([]byte, bool) {
-	return []byte{}, true
+	return nil, false
 }
 
 func (mo *dummyMergeOperator) Name() string { return mergeDummy }
@@ -40,10 +40,7 @@ func (mo *realMergeOperator) FullMerge(key, existingValue []byte, operands [][]b
 }
 
 func (mo *realMergeOperator) PartialMerge(key, leftOperand, rightOperand []byte) ([]byte, bool) {
-	var merged []byte
-	merged = append(merged, leftOperand...)
-	merged = append(merged, rightOperand...)
-	return merged, true
+	return nil, false
 }
 
 func (mo *realMergeOperator) Name() string { return mergeReal }
