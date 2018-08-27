@@ -15,7 +15,7 @@ std::string kDBPath = "./segments";
 void performIteration(rocksdb::DB *db);
 void iterate(rocksdb::DB *db);
 int estimateNumKeys(rocksdb::DB *db);
-void step(rocksdb::Iterator *it, int count);
+int step(rocksdb::Iterator *it, int keysTotal, int keysCount);
 void run();
 
 int main()
@@ -60,7 +60,6 @@ void performIteration(rocksdb::DB *db)
         std::cout << "Iteration started" << std::endl;
         iterate(db);
         std::cout << "Iteration finished" << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 }
 
@@ -78,32 +77,36 @@ int estimateNumKeys(rocksdb::DB *db)
 
 void iterate(rocksdb::DB *db)
 {
-    auto totalKeys = estimateNumKeys(db);
-    std::cout << "total keys: " << totalKeys << std::endl;
+    auto keysTotal = estimateNumKeys(db);
 
     auto readOptions = rocksdb::ReadOptions();
     readOptions.tailing = true;
     readOptions.fill_cache = false;
 
-    int counter = 0;
+    int keysCount = 0;
+    int valueLenSum = 0;
     auto it = db->NewIterator(readOptions);
     for (it->SeekToFirst(); it->Valid(); it->Next())
     {
-        counter++;
-        step(it, counter);
+        keysCount++;
+        valueLenSum += step(it, keysTotal, keysCount);
     };
 
     if (!it->status().ok())
     {
         throw std::runtime_error(it->status().ToString());
     }
+
+    std::cout << "Sum of value length: " << valueLenSum << std::endl;
 }
 
-void step(rocksdb::Iterator *it, int counter)
+int step(rocksdb::Iterator *it, int keysTotal, int keysCount)
 {
-    if (counter % 1000000 == 0)
+    auto _k = it->key().ToString();
+    auto _v = it->value().ToString();
+    if (keysCount % (keysTotal / 10) == 0)
     {
-        std::cout << "Progress: " << counter << std::endl;
-        std::cout << "Example key length: " << it->key().size() << "; exmaple value length: " << it->value().size() << std::endl;
+        std::cout << "Progress: " << int(100*double(keysCount)/double(keysTotal)) << std::endl;
     }
+    return it->value().size();
 }
