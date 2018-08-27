@@ -1,31 +1,17 @@
 ## gorocksdb_merge_operator_issue
 
-We are experiencing uncontrolled process memory growth during iteration over the whole RocksDB database in one of our Go applications. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. This is the minimal working example reproducing this issue. The application just iterates several times over the database.
+We have `Go` application that uses `Rocksdb` via `CGO` wrappers (). Currently we are experiencing uncontrolled process memory growth during the iteration over the whole RocksDB databases. After some tests we've find out that the memory allocated within `MergeOperator` is actually never freed. Two minimal working examples in `Go` and `C++` are provided to explore this issue. Both examples are just iterating several times over the database. Please follow these steps to reproduce:
 
-There are two implementations of `MergeOperator`:
-1. `dummy` that actually does nothing;
-2. `real` which allocates some memory, emulating the behaviour of real-life `MergeOperator` implementation;
+Install build dependencies the way you prefer:
+1. `go` 1.10.1
+2. `g++` 7.3.1
+3. `librocksdb.so` 5.13.1 (headers should go to /usr/local/include/rocksdb)
+4. `valgrind`
+5. `massif-visualizer`
 
-The use of `real` implementaion results in memory leak on the `C++` side of the application. 
-
-Please follow these steps to reproduce:
-
-
-### Go
-
-#### Prerequisites
+Get project sources:
 ```
-go >= 1.10
-librocksdb.so >= 5.13
-valgrind
-massif-visualizer
-```
-
-#### Steps to reproduce
-
-Get sources and compile binary:
-```
-go get -v https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue
+go get -v https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue || true
 cd $GOPATH/src/github.com/vitalyisaev2/gorocksdb_merge_operator_issue
 ```
 
@@ -37,10 +23,22 @@ Unpack database dump:
 tar xzvf segments.tar.gz`
 ```
 
+Compile binaries:
+```
+make build
+```
+____
+
+### Go
+
+We provide two implementations of `MergeOperator`:
+1. `dummy` that actually does nothing;
+2. `real` which allocates some memory during `[]byte` concatenation, emulating the behaviour of real-life `MergeOperator` implementation;
+
 Run database iterators in two different modes:
 ```
-valgrind --tool=massif ./gorocksdb_merge_operator_issue dummy iterate
-valgrind --tool=massif ./gorocksdb_merge_operator_issue real iterate
+valgrind --tool=massif ./mve-go dummy iterate
+valgrind --tool=massif ./mve-go real iterate
 ```
 
 Launch GUI tool to visualize heap profile:
@@ -48,15 +46,19 @@ Launch GUI tool to visualize heap profile:
 massif-visualizer massif.out.$PID
 ```
 
-#### Results
-
-##### `Dummy`
-Everything is fine here.
+Everything is fine for `dummy` operator:
 ![dummy](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/go/profile.dummy.jpeg)
 
-##### `Real`
-It turns out that the huge amount of memory is allocated within `CGO` parts of the application code (it is hidden behind `runtime.asmcgocall`), and this memory is never freed.
+With `real` operator the heap is leaking. It turns out that the huge amount of memory is allocated within `CGO` parts of the application code (because it is hidden behind `runtime.asmcgocall`), and this memory is never freed.
 ![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/go/profile.real.jpeg)
+
+____
 
 ### C++
 
+For C++ we provide only `real` implementation.
+```
+valgrind --tool=massif ./mve-cpp
+```
+Everything is fine here:
+![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/cpp/profile.real.jpeg)
