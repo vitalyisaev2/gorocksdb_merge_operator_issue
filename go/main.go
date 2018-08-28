@@ -38,9 +38,8 @@ func main() {
 	)
 	switch os.Args[2] {
 	case actionGenerate:
-		log.Fatal("Don't use data generation, use prepared dump")
-		// dbFactory = openDBForWriting
-		// action = performGeneration
+		dbFactory = openDBForWriting
+		action = performGeneration
 	case actionIterate:
 		dbFactory = openDBForReading
 		action = performIteration
