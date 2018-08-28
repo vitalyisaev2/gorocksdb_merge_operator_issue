@@ -9,7 +9,7 @@ import (
 
 // performIteration runs iterator several times
 func performIteration(db *gorocksdb.DB) error {
-	const n = 3
+	const n = 10
 	for i := 0; i < n; i++ {
 		if err := iterate(db); err != nil {
 			return err
@@ -17,7 +17,6 @@ func performIteration(db *gorocksdb.DB) error {
 	}
 	return nil
 }
-
 
 // iterate creates new iterator and walks through the whole database
 func iterate(db *gorocksdb.DB) error {

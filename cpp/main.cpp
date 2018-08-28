@@ -55,7 +55,7 @@ void run() {
 
 void performIteration(rocksdb::DB *db)
 {
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         std::cout << "Iteration started" << std::endl;
         iterate(db);

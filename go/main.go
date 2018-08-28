@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	mergeDummy = "dummy"
-	mergeReal = "real"
+	mergeDummy     = "dummy"
+	mergeReal      = "real"
 	actionGenerate = "generate"
-	actionIterate = "iterate"
+	actionIterate  = "iterate"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 
 	var (
 		dbFactory func(gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
-		action func(db *gorocksdb.DB) error
+		action    func(db *gorocksdb.DB) error
 	)
 	switch os.Args[2] {
 	case actionGenerate:
@@ -102,6 +102,10 @@ func openDBForReading(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	log.Println("Compacting range started")
+	db.CompactRange(gorocksdb.Range{})
+	log.Println("Compacting range finished")
 
 	free := func() {
 		db.Close()
