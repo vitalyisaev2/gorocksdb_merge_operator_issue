@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -12,10 +13,12 @@ import (
 func performIteration(db *gorocksdb.DB) error {
 	const n = 10
 	for i := 0; i < n; i++ {
-		log.Printf("Running iteration %d\n", i)
+		log.Printf("Iteration start %d\n", i)
 		if err := iterate(db); err != nil {
 			return err
 		}
+		log.Printf("Iteration finished %d\n", i)
+		printDatabaseStats(db)
 	}
 
 	log.Println("Waiting for a while in order to let runtime free memory")
@@ -76,4 +79,25 @@ func step(it *gorocksdb.Iterator, keysTotal int, keysCount int) int {
 		log.Printf("Progress: %v\n", int(100*float64(keysCount)/float64(keysTotal)))
 	}
 	return value.Size()
+}
+
+func printDatabaseStats(db *gorocksdb.DB) {
+	log.Println("Database stats:")
+	properties := []string{
+		"estimate-num-keys",
+		"cur-size-all-mem-tables",
+		"estimate-table-readers-mem",
+	}
+	for _, property := range properties {
+		log.Printf("%s: %d\n", property, getIntProperty(db, property))
+	}
+}
+
+func getIntProperty(db *gorocksdb.DB, property string) int {
+	value := db.GetProperty(fmt.Sprintf("rocksdb.%s", property))
+	result, err := strconv.Atoi(value)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
