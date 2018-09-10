@@ -111,10 +111,6 @@ func openDBForReading(mo gorocksdb.MergeOperator) (*gorocksdb.DB, func(), error)
 		return nil, nil, err
 	}
 
-	log.Println("Compacting range started")
-	db.CompactRange(gorocksdb.Range{})
-	log.Println("Compacting range finished")
-
 	free := func() {
 		db.Close()
 		opts.Destroy()
