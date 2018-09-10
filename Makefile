@@ -1,8 +1,9 @@
 build-go:
-	go build -o mve-go ./go/...
+	go get -u ./src/mve-go/...
+	go build -o mve-go ./src/mve-go/...
 
 build-cpp:
-	g++ cpp/*.cpp -I/usr/local/include/rocksdb/ -I./cpp -lrocksdb -O2 -g -std=c++11 -fno-rtti -o mve-cpp
+	g++ ./src/mve-cpp/*.cpp -I/usr/local/include/rocksdb/ -I./src/mve-cpp -lrocksdb -O2 -g -std=c++11 -fno-rtti -o mve-cpp
 
 build: build-go build-cpp
 

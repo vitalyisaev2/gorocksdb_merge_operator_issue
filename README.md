@@ -3,9 +3,9 @@
 We have `Go` application that uses `Rocksdb` via `CGO` wrappers (https://github.com/tecbot/gorocksdb). Currently we are experiencing uncontrolled process memory growth at the time of the iteration over the whole RocksDB database. After some tests we've find out that memory allocated within `MergeOperator` is actually never freed. Two minimal working examples in `Go` and `C++` are provided to explore this issue. Both examples are just iterating several times over the database. Please follow these steps to reproduce:
 
 Install build dependencies the way you prefer:
-1. `go` 1.10.1
+1. `go` 1.11
 2. `g++` 7.3.1
-3. `librocksdb.so` 5.13.1 (headers should go to /usr/local/include/rocksdb)
+3. `librocksdb.so`: for example, headers should go to `/usr/local/include/rocksdb`, binaries should go to `/usr/loca/lib`; you can [build shared library](https://github.com/facebook/rocksdb/blob/master/INSTALL.md) on your own, or, assuming that you're on Linux x86_64, you can download [this archive](https://drive.google.com/open?id=1LDpjtE0rS5j_MlAVezB8sG5hsLYR2uUO)
 4. `valgrind`
 5. `massif-visualizer`
 
@@ -45,6 +45,8 @@ Launch GUI tool to visualize heap profile:
 ```
 massif-visualizer massif.out.$PID
 ```
+
+Profiler HTTP server is also available on http://localhost:6060/debug/pprof.
 
 Everything is fine for `dummy` operator:
 ![dummy](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/go/profile.dummy.jpeg)
