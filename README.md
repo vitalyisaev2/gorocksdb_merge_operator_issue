@@ -49,10 +49,10 @@ massif-visualizer massif.out.$PID
 Profiler HTTP server is also available on http://localhost:6060/debug/pprof.
 
 Everything is fine for `dummy` operator:
-![dummy](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/go/profile.dummy.jpeg)
+![dummy](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/src/mve-go/profile.dummy.jpeg)
 
 With `real` operator the heap is leaking. It turns out that the huge amount of memory is allocated within `CGO` parts of the application code (because it is hidden behind `runtime.asmcgocall`), and this memory is never freed.
-![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/go/profile.real.jpeg)
+![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/src/mve-go/profile.real.jpeg)
 
 ____
 
@@ -63,4 +63,4 @@ For C++ we provide only `real` implementation.
 valgrind --tool=massif ./mve-cpp
 ```
 Everything is fine here:
-![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/cpp/profile.real.jpeg)
+![real](https://github.com/vitalyisaev2/gorocksdb_merge_operator_issue/blob/master/src/mve-cpp/profile.real.jpeg)
